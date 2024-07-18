@@ -51,6 +51,7 @@ public class EmployeeController {
                 jwtProperties.getAdminTtl(),
                 claims);
 
+        //封装成配置属性类。。。
         EmployeeLoginVO employeeLoginVO = EmployeeLoginVO.builder()
                 .id(employee.getId())
                 .userName(employee.getUsername())
