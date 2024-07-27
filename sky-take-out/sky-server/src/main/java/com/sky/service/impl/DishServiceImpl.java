@@ -21,6 +21,7 @@ import com.sky.exception.DeletionNotAllowedException;
 import com.sky.mapper.DishFlavorMapper;
 import com.sky.mapper.DishMapper;
 import com.sky.mapper.SetmealDishMapper;
+import com.sky.mapper.SetmealMapper;
 import com.sky.result.PageResult;
 import com.sky.service.DishService;
 import com.sky.vo.DishVO;
@@ -38,6 +39,8 @@ public class DishServiceImpl implements DishService {
     private DishFlavorMapper dishFlavorMapper;
     @Autowired
     private SetmealDishMapper setmealDishMapper;
+    @Autowired
+    private SetmealMapper setmealMapper;
 
     /**
      * 新增菜品和相应的口味
@@ -89,7 +92,7 @@ public class DishServiceImpl implements DishService {
     public void deleteBatch(List<Long> ids) {
         //判断当前菜品是否能够删除，即是否存在起售中的菜品
         for (Long id : ids) {
-            Dish dish =dishMapper.getById(id);
+            Dish dish = dishMapper.getById(id);
             if(dish.getStatus() == StatusConstant.ENABLE) {
                 //如果当前菜品的状态是正在售卖中，则不能删除
                throw new DeletionNotAllowedException(MessageConstant.DISH_ON_SALE);
@@ -199,10 +202,27 @@ public class DishServiceImpl implements DishService {
                                     .status(StatusConstant.DISABLE)
                                     .build();
                                     
-                    setmealDishMapper.update(setmeal);
+                    setmealMapper.update(setmeal);
                 }
             }
         }
 
+    }
+
+    /**
+     * 根据分类id查询菜品数据集合
+     * @param categoryId
+     * @return
+     */
+    public List<Dish> list(Long categoryId) {
+        
+        Dish dish = Dish.builder()
+                    .categoryId(categoryId)
+                    .status(StatusConstant.ENABLE)
+                    .build();
+        
+        //因为写的是动态查询菜品数据
+        List<Dish> list = dishMapper.list(dish);
+        return list;
     }
 }

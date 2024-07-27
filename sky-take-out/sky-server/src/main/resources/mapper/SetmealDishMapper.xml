@@ -12,21 +12,17 @@
         </foreach>
     </select>    
 
-    <!-- update --> 
 
-    <update id="update" parameterType="Setmeal">
-        update setmeal
-        <set>
-            <if test="name != null"> name = #{name}, </if>
-            <if test="categoryId != null"> category_id = #{categoryId}, </if>
-            <if test="price != null"> price = #{price}, </if>
-            <if test="image != null"> image = #{image}, </if>
-            <if test="description != null"> description = #{description}, </if>
-            <if test="status != null"> status = #{status}, </if>
-            <if test="updateTime != null"> update_time = #{updateTime}, </if>
-            <if test="updateUser != null"> update_user = #{updateUser}, </if>
-        </set>
-        where id = #{id}
-    </update>
+
+    <!-- insertBatch --> 
+
+    <insert id="insertBatch" parameterType="list">
+        insert into setmeal_dish 
+        (setmeal_id, dish_id, name, price, copies)
+            values
+        <foreach collection="setmealDishs" item="s_dish" separator=",">
+            (#{s_dish.setmealId}, #{s_dish.dishId}, #{s_dish.name}, #{s_dish.price}, #{s_dish.copies})
+        </foreach>
+    </insert>
 
 </mapper>
