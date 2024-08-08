@@ -25,4 +25,14 @@
         
     </select>
 
+    <!-- insertBatch --> 
+
+    <insert id="insertBatch" parameterType="list">
+        insert into shopping_cart (name, image, user_id, dish_id, setmeal_id, dish_flavor, number, amount, create_time)
+        values
+        <foreach collection="shoppingCartList" item="SC" separator=",">
+            (#{SC.name}, #{SC.image}, #{SC.userId}, #{SC.dishId}, #{SC.setmealId}, #{SC.dishFlavor}, #{SC.number}, #{SC.amount}, #{SC.createTime})
+        </foreach>
+    </insert>
+
 </mapper>
