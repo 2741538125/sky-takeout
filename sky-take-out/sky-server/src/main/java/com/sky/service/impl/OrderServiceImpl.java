@@ -3,7 +3,9 @@ package com.sky.service.impl;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.aspectj.internal.lang.annotation.ajcDeclarePrecedence;
@@ -12,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
@@ -44,6 +47,7 @@ import com.sky.vo.OrderPaymentVO;
 import com.sky.vo.OrderStatisticsVO;
 import com.sky.vo.OrderSubmitVO;
 import com.sky.vo.OrderVO;
+import com.sky.websocket.WebSocketServer;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -64,9 +68,11 @@ public class OrderServiceImpl implements OrderService{
     private UserMapper userMapper;
     @Autowired
     private WeChatPayUtil weChatPayUtil;
+    @Autowired
+    private WebSocketServer webSocketServer;
 
-    //将orderid定义为全局变量
-    public static Long orderid;
+    //将orders定义为全局变量
+    private Orders orders_temp;
     //由于没真正执行paysuccess方法，得不到订单id，所以在新建订单时存储当前订单id
 
     /**
@@ -130,7 +136,7 @@ public class OrderServiceImpl implements OrderService{
                          .build();
 
         //为orderid赋值
-        orderid = orders.getId();
+        this.orders_temp = orders;
 
         return orderSubmitVO;
     }
@@ -168,7 +174,16 @@ public class OrderServiceImpl implements OrderService{
         Integer OrderStatus = Orders.TO_BE_CONFIRMED;//订单状态，待接单
         //发现没有将支付时间 check_out属性赋值，所以在这里更新
         LocalDateTime check_out_time = LocalDateTime.now();
-        orderMapper.updateStatus(OrderStatus, OrderPaidStatus, check_out_time, orderid);
+        orderMapper.updateStatus(OrderStatus, OrderPaidStatus, check_out_time, orders_temp.getId());
+
+        //由于我们跳过了微信支付的功能，所以不会回调到paySuccess，所以在这里向websocket推送消息
+        //通过websocket向客户端浏览器推送消息 type orderId content
+        Map map = new HashMap();
+        map.put("type",1);
+        map.put("orderId",this.orders_temp.getId());
+        map.put("content","订单号："+this.orders_temp.getNumber());
+        String json = JSON.toJSONString(map);
+        webSocketServer.sendToAllClient(json);
 
         return vo;
     }
@@ -192,6 +207,16 @@ public class OrderServiceImpl implements OrderService{
                 .build();
 
         orderMapper.update(orders);
+
+        //由于我们跳过了微信支付的功能，所以不会回调到paySuccess
+        //通过websocket向客户端浏览器推送消息 type orderId content
+        Map map = new HashMap<>();
+        map.put("type", 1); // 1表示来单提醒 2表示催单
+        map.put("orderId", ordersDB.getId());
+        map.put("content","订单号: " + outTradeNo);
+
+        String json = JSON.toJSONString(map);
+        webSocketServer.sendToAllClient(json); 
     }
 
 
