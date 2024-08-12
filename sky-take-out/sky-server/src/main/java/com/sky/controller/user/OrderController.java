@@ -18,6 +18,7 @@ import com.sky.service.OrderService;
 import com.sky.vo.OrderPaymentVO;
 import com.sky.vo.OrderSubmitVO;
 import com.sky.vo.OrderVO;
+import com.sky.websocket.WebSocketServer;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -118,6 +119,19 @@ public class OrderController {
         // 再来一单就是将原订单中的商品重新加入到购物车中
         log.info("再来一单：{}", id);
         orderService.repetition(id);
+        return Result.success();
+    }
+
+    /**
+     * 客户催单
+     * @param id
+     * @return
+     */
+    @GetMapping("/reminder/{id}")
+    @ApiOperation("客户催单")
+    public Result reminder(@PathVariable Long id) {
+        log.info("客户催单：{}", id);
+        orderService.reminder(id);
         return Result.success();
     }
 
